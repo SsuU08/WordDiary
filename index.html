@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+<title>Life Diary</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500&family=DM+Serif+Display&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --cream:#f0ece3;--cream2:#e8e2d5;--white:#ffffff;
+  --brown:#6b5f52;--brown-dark:#4a3f35;--brown-light:#9c9085;
+  --green-tag:#c5cfa0;--gray-tag:#b0b5a8;--border:#ddd6ca;
+  --text:#4a3f35;--text-light:#9c9085;--text-muted:#b5aea6;
+  --accent-blue:#7b8fc7;--accent-pink:#d4798a;
+}
+html,body{height:100%;background:#f0ece3;font-family:'DM Sans',sans-serif;color:var(--text);overflow:hidden}
+.screen{position:fixed;inset:0;display:flex;flex-direction:column;background:var(--cream);transition:transform 0.32s cubic-bezier(.4,0,.2,1),opacity 0.32s;overflow:hidden}
+.screen.hidden{transform:translateX(100%);pointer-events:none}
+.screen.slide-left{transform:translateX(-30%);opacity:0.4;pointer-events:none}
+
+/* SPLASH */
+#splash{align-items:center;justify-content:center}
+.splash-tree{width:180px;height:180px;margin-bottom:28px}
+.splash-title{font-family:'Playfair Display',serif;font-size:30px;font-weight:700;letter-spacing:0.14em;color:var(--brown-dark);margin-bottom:10px}
+.splash-sub{font-size:12px;color:var(--brown-light);letter-spacing:0.01em;font-weight:300;text-align:center;padding:0 40px}
+
+/* HOME */
+.home-header{background:var(--cream);padding:56px 28px 28px;border-radius:0 0 36px 36px}
+.home-greeting{font-size:13px;color:var(--brown-light);margin-bottom:6px}
+.home-title{font-family:'DM Serif Display',serif;font-size:26px;color:var(--brown-dark);line-height:1.35}
+.home-body{flex:1;overflow-y:auto;padding:20px 20px 48px;display:flex;flex-direction:column;gap:14px}
+.idiom-card{background:var(--white);border-radius:16px;padding:16px 18px;display:flex;align-items:center;gap:12px}
+.idiom-label{font-size:10px;letter-spacing:0.12em;color:var(--text-muted);font-weight:500;margin-bottom:5px}
+.idiom-text{font-size:13px;color:var(--brown);line-height:1.55}
+.idiom-refresh{width:34px;height:34px;background:var(--cream);border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform 0.3s}
+.idiom-refresh:active{transform:rotate(180deg)}
+.stats-card{background:var(--white);border-radius:16px;padding:20px 18px}
+.stats-title{font-family:'DM Serif Display',serif;font-size:20px;color:var(--brown-dark);margin-bottom:4px}
+.stats-sub{font-size:12px;color:var(--text-muted)}
+.stats-row{display:flex;gap:10px;margin-top:14px}
+.stat-box{flex:1;background:var(--cream);border-radius:12px;padding:12px;text-align:center}
+.stat-num{font-family:'Playfair Display',serif;font-size:26px;color:var(--brown-dark)}
+.stat-lbl{font-size:9px;color:var(--text-muted);letter-spacing:0.06em;margin-top:2px}
+.divider{height:1px;background:var(--border)}
+.cat-btn{border-radius:16px;padding:26px 20px;border:none;cursor:pointer;font-family:'DM Serif Display',serif;font-size:26px;text-align:center;width:100%;color:var(--brown-dark);transition:opacity 0.15s}
+.cat-btn:active{opacity:0.82}
+.cat-btn.service{background:var(--green-tag)}
+.cat-btn.education{background:var(--gray-tag)}
+
+/* LIST */
+.list-header{background:var(--cream);padding:52px 28px 24px;border-radius:0 0 36px 36px;display:flex;align-items:flex-end;justify-content:space-between}
+.list-title{font-family:'DM Serif Display',serif;font-size:30px;color:var(--brown-dark)}
+.add-btn{width:46px;height:46px;background:var(--white);border-radius:50%;border:none;cursor:pointer;font-size:22px;color:var(--brown);box-shadow:0 2px 10px rgba(0,0,0,0.09);display:flex;align-items:center;justify-content:center}
+.list-body{flex:1;overflow-y:auto;padding:28px 24px 48px}
+.timeline{position:relative;padding-left:22px}
+.timeline::before{content:'';position:absolute;left:5px;top:10px;bottom:10px;width:1px;background:var(--border)}
+.t-item{position:relative;margin-bottom:14px}
+.t-dot{position:absolute;left:-19px;top:15px;width:10px;height:10px;border-radius:50%;background:var(--brown-dark);border:2px solid var(--cream)}
+.t-item:not(:first-child) .t-dot{background:var(--white);border-color:var(--brown-light)}
+.entry-card{background:var(--white);border-radius:14px;padding:15px 18px;cursor:pointer;border:1px solid transparent;transition:border-color 0.15s}
+.entry-card:active{border-color:var(--border)}
+.entry-date{font-size:10px;letter-spacing:0.1em;color:var(--text-muted);font-weight:500;margin-bottom:5px}
+.entry-subj{font-size:15px;font-weight:500;letter-spacing:0.06em;color:var(--brown-dark);text-transform:uppercase}
+.list-total{text-align:center;font-size:11px;letter-spacing:0.1em;color:var(--text-muted);padding-top:20px}
+.back-btn{background:none;border:none;cursor:pointer;color:var(--brown-light);font-size:13px;display:flex;align-items:center;gap:4px;padding:0;margin-bottom:6px;font-family:'DM Sans',sans-serif}
+
+/* DETAIL */
+.detail-header{padding:52px 28px 18px;position:relative}
+.detail-date{font-size:11px;letter-spacing:0.1em;color:var(--text-muted);margin-bottom:5px}
+.detail-subj{font-family:'Playfair Display',serif;font-size:26px;font-weight:700;letter-spacing:0.06em;color:var(--brown-dark);text-transform:uppercase}
+.gender-toggle{display:flex;border-radius:24px;overflow:hidden;width:60px;position:absolute;right:28px;top:52px}
+.g-m,.g-f{width:30px;height:30px;border:none;cursor:pointer;transition:opacity 0.2s}
+.g-m{background:var(--accent-blue)}
+.g-f{background:var(--accent-pink)}
+.detail-body{flex:1;overflow-y:auto;padding:4px 24px 48px;display:flex;flex-direction:column;gap:16px}
+.checklist-box{background:var(--white);border-radius:18px;padding:20px 18px}
+.cl-title{font-size:11px;letter-spacing:0.12em;font-weight:600;color:var(--brown-dark);margin-bottom:16px}
+.cl-row{display:flex;align-items:flex-start;gap:10px;margin-bottom:12px}
+.cl-label{font-size:11px;font-weight:500;letter-spacing:0.08em;color:var(--brown-dark);min-width:62px;padding-top:5px}
+.cl-opts{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.cl-opt{padding:4px 12px;border-radius:20px;border:1px solid var(--border);font-size:11px;letter-spacing:0.06em;color:var(--brown-light);cursor:pointer;background:var(--white);transition:all 0.13s;font-family:'DM Sans',sans-serif}
+.cl-opt.on{background:var(--brown-dark);color:var(--white);border-color:var(--brown-dark)}
+.cl-sep{width:1px;height:14px;background:var(--border)}
+.info-box{background:var(--cream2);border-radius:18px;padding:18px}
+.info-row{display:flex;gap:14px;margin-bottom:14px}
+.info-row:last-child{margin-bottom:0}
+.info-lbl{font-size:11px;font-weight:600;letter-spacing:0.08em;color:var(--brown-dark);min-width:50px;padding-top:2px}
+.info-ta{border:none;outline:none;background:transparent;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--brown);width:100%;resize:none;line-height:1.6}
+.info-ta::placeholder{color:var(--text-muted)}
+
+/* MODAL */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.28);z-index:300;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.25s}
+.modal-bg.open{opacity:1;pointer-events:all}
+.modal{background:var(--white);border-radius:24px 24px 0 0;padding:28px 24px 44px;width:100%;transform:translateY(100%);transition:transform 0.3s cubic-bezier(.4,0,.2,1)}
+.modal-bg.open .modal{transform:translateY(0)}
+.modal-title{font-family:'DM Serif Display',serif;font-size:20px;color:var(--brown-dark);margin-bottom:18px}
+.modal-close{float:right;background:none;border:none;cursor:pointer;font-size:22px;color:var(--text-muted);line-height:1;margin-top:-4px}
+.m-input{width:100%;border:1px solid var(--border);border-radius:12px;padding:12px 14px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);background:var(--cream);outline:none;margin-bottom:10px}
+.m-input:focus{border-color:var(--brown-light)}
+.m-btn{width:100%;padding:14px;background:var(--brown-dark);color:#fff;border:none;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer}
+.m-btn:active{opacity:0.88}
+</style>
+</head>
+<body>
+
+<!-- SPLASH -->
+<div class="screen" id="splash">
+  <div class="splash-tree">
+    <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <path d="M96 162 Q93 132 88 112 Q83 92 78 76" stroke="#8B6340" stroke-width="7" fill="none" stroke-linecap="round"/>
+      <path d="M104 162 Q107 132 112 112 Q117 92 122 76" stroke="#8B6340" stroke-width="7" fill="none" stroke-linecap="round"/>
+      <ellipse cx="100" cy="165" rx="18" ry="5" fill="#7a5530" opacity="0.45"/>
+      <path d="M91 122 Q73 107 53 102" stroke="#8B6340" stroke-width="5" fill="none" stroke-linecap="round"/>
+      <path d="M94 106 Q78 89 63 81" stroke="#8B6340" stroke-width="4" fill="none" stroke-linecap="round"/>
+      <path d="M100 96 Q100 76 100 60" stroke="#8B6340" stroke-width="4" fill="none" stroke-linecap="round"/>
+      <path d="M106 109 Q124 93 142 89" stroke="#8B6340" stroke-width="4" fill="none" stroke-linecap="round"/>
+      <path d="M109 123 Q130 113 150 116" stroke="#8B6340" stroke-width="5" fill="none" stroke-linecap="round"/>
+      <ellipse cx="50" cy="97" rx="14" ry="9" fill="#4a7c4e" transform="rotate(-20,50,97)"/>
+      <ellipse cx="61" cy="77" rx="13" ry="8" fill="#4a7c4e" transform="rotate(-10,61,77)"/>
+      <ellipse cx="38" cy="110" rx="11" ry="7" fill="#3d6b41" transform="rotate(15,38,110)"/>
+      <ellipse cx="145" cy="85" rx="13" ry="8" fill="#4a7c4e" transform="rotate(20,145,85)"/>
+      <ellipse cx="152" cy="111" rx="12" ry="8" fill="#3d6b41" transform="rotate(-10,152,111)"/>
+      <ellipse cx="162" cy="122" rx="10" ry="7" fill="#4a7c4e" transform="rotate(25,162,122)"/>
+      <ellipse cx="100" cy="52" rx="13" ry="9" fill="#7ab648" transform="rotate(5,100,52)"/>
+      <ellipse cx="116" cy="65" rx="12" ry="8" fill="#8ec85a" transform="rotate(20,116,65)"/>
+      <ellipse cx="84" cy="67" rx="11" ry="7" fill="#7ab648" transform="rotate(-15,84,67)"/>
+      <ellipse cx="132" cy="96" rx="12" ry="7" fill="#8ec85a" transform="rotate(10,132,96)"/>
+      <ellipse cx="69" cy="91" rx="10" ry="7" fill="#7ab648" transform="rotate(-20,69,91)"/>
+      <ellipse cx="74" cy="116" rx="11" ry="7" fill="#8ec85a" transform="rotate(-5,74,116)"/>
+      <ellipse cx="126" cy="116" rx="11" ry="7" fill="#7ab648" transform="rotate(15,126,116)"/>
+      <ellipse cx="87" cy="119" rx="7" ry="9" fill="#7a5530"/>
+    </svg>
+  </div>
+  <div class="splash-title">LIFE DIARY</div>
+  <div class="splash-sub">Be not overcome of evil, but overcome evil with good.</div>
+</div>
+
+<!-- HOME -->
+<div class="screen hidden" id="home">
+  <div class="home-header">
+    <div class="home-greeting">Good Morning, Jisu.</div>
+    <div class="home-title">Let's write God's word<br/>on your heart</div>
+  </div>
+  <div class="home-body">
+    <div class="idiom-card">
+      <div style="flex:1">
+        <div class="idiom-label">RANDOM IDIOM</div>
+        <div class="idiom-text" id="idiomText">Loading...</div>
+      </div>
+      <button class="idiom-refresh" onclick="refreshIdiom()" title="Refresh">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9c9085" stroke-width="2.2" stroke-linecap="round">
+          <path d="M1 4v6h6M23 20v-6h-6"/>
+          <path d="M20.49 9A9 9 0 005.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 013.51 15"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="stats-card">
+      <div class="stats-title">Statistics</div>
+      <div class="stats-sub" id="statsSub">on the drawing board...</div>
+      <div class="stats-row" id="statsRow" style="display:none">
+        <div class="stat-box"><div class="stat-num" id="svc">0</div><div class="stat-lbl">SERVICE</div></div>
+        <div class="stat-box"><div class="stat-num" id="edu">0</div><div class="stat-lbl">EDUCATION</div></div>
+        <div class="stat-box"><div class="stat-num" id="tot">0</div><div class="stat-lbl">TOTAL</div></div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+    <button class="cat-btn service" onclick="openList('Service')">Service</button>
+    <button class="cat-btn education" onclick="openList('Education')">Education</button>
+  </div>
+</div>
+
+<!-- LIST -->
+<div class="screen hidden" id="list">
+  <div class="list-header">
+    <div>
+      <button class="back-btn" onclick="go('list','home',true)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        Home
+      </button>
+      <div class="list-title" id="listTitle">Service</div>
+    </div>
+    <button class="add-btn" onclick="openModal()">+</button>
+  </div>
+  <div class="list-body">
+    <div class="timeline" id="timeline"></div>
+    <div class="list-total" id="listTotal">TOTAL 00</div>
+  </div>
+</div>
+
+<!-- DETAIL -->
+<div class="screen hidden" id="detail">
+  <div class="detail-header">
+    <button class="back-btn" onclick="go('detail','list',true)">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      <span id="detailBack">Service</span>
+    </button>
+    <div class="detail-date" id="dDate">YYMMDD</div>
+    <div class="detail-subj" id="dSubj">SUBJECT</div>
+    <div class="gender-toggle">
+      <button class="g-m" onclick="setGender('M')" title="Male"></button>
+      <button class="g-f" onclick="setGender('F')" title="Female"></button>
+    </div>
+  </div>
+  <div class="detail-body">
+    <div class="checklist-box">
+      <div class="cl-title">CHECKLIST</div>
+      <div class="cl-row">
+        <div class="cl-label">ARRIVE</div>
+        <div class="cl-opts" data-key="arrive" data-single="1">
+          <button class="cl-opt" data-v="ON TIME">ON TIME</button>
+          <button class="cl-opt" data-v="LATE">LATE</button>
+        </div>
+      </div>
+      <div class="cl-row">
+        <div class="cl-label">CLOTH</div>
+        <div class="cl-opts" data-key="cloth" data-single="1">
+          <button class="cl-opt" data-v="STANDARD">STANDARD</button>
+          <button class="cl-opt" data-v="NOT YET">NOT YET</button>
+        </div>
+      </div>
+      <div class="cl-row">
+        <div class="cl-label">SERVICE</div>
+        <div class="cl-opts" data-key="service_cl" data-single="0">
+          <button class="cl-opt" data-v="INTACT">INTACT</button>
+          <span class="cl-sep"></span>
+          <button class="cl-opt" data-v="SONG">SONG</button>
+          <button class="cl-opt" data-v="GOD'S WORD">GOD'S WORD</button>
+          <button class="cl-opt" data-v="PRAY">PRAY</button>
+          <button class="cl-opt" data-v="AD">AD</button>
+        </div>
+      </div>
+    </div>
+    <div class="info-box">
+      <div class="info-row">
+        <div class="info-lbl">IDIOM</div>
+        <div style="flex:1"><textarea class="info-ta" id="dIdiom" rows="1" placeholder="Write today's idiom..."></textarea></div>
+      </div>
+      <div class="info-row">
+        <div class="info-lbl">NOTES</div>
+        <div style="flex:1"><textarea class="info-ta" id="dNotes" rows="3" placeholder="Write your notes..."></textarea></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-bg" id="modal" onclick="bgClose(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">×</button>
+    <div class="modal-title">New Entry</div>
+    <input class="m-input" id="mDate" placeholder="Date  (e.g. 260419)" maxlength="6"/>
+    <input class="m-input" id="mSubj" placeholder="Subject / Title"/>
+    <button class="m-btn" onclick="addEntry()">Add Entry</button>
+  </div>
+</div>
+
+<script>
+const KEY='lifediary_v2';
+let db={Service:[],Education:[]};
+let cat='Service';
+let idx=null;
+let busy=false;
+
+const FALLBACKS=["Actions speak louder than words.","Every cloud has a silver lining.","God helps those who help themselves.","Let your light shine before others.","The truth shall set you free.","Love your neighbor as yourself.","Faith without works is dead.","Be still and know that I am God.","Seek and you shall find.","Ask, and it will be given to you."];
+
+function load(){try{db=JSON.parse(localStorage.getItem(KEY))||{Service:[],Education:[]};}catch{db={Service:[],Education:[]};}}
+function save(){localStorage.setItem(KEY,JSON.stringify(db));}
+
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>{
+    if(s.id===id){s.classList.remove('hidden','slide-left');}
+    else{s.classList.add('hidden');s.classList.remove('slide-left');}
+  });
+}
+
+function go(from,to,back){
+  if(back){
+    const f=document.getElementById(from);
+    f.classList.add('slide-left');
+    setTimeout(()=>{ f.classList.add('hidden'); f.classList.remove('slide-left'); },320);
+  }
+  show(to);
+  if(to==='home') updateStats();
+}
+
+/* splash → home */
+setTimeout(()=>{show('home');idiomFallback();updateStats();},2200);
+
+function updateStats(){
+  const s=db.Service.length,e=db.Education.length,t=s+e;
+  document.getElementById('svc').textContent=s;
+  document.getElementById('edu').textContent=e;
+  document.getElementById('tot').textContent=t;
+  if(t>0){document.getElementById('statsSub').style.display='none';document.getElementById('statsRow').style.display='flex';}
+  else{document.getElementById('statsSub').style.display='';document.getElementById('statsRow').style.display='none';}
+}
+
+function openList(c){
+  cat=c;
+  document.getElementById('listTitle').textContent=c;
+  renderList();
+  show('list');
+}
+
+function fmt(d){
+  const s=String(d||'');
+  if(s.length===6) return s.slice(0,2)+'.'+s.slice(2,4)+'.'+s.slice(4,6);
+  return s||'------';
+}
+
+function renderList(){
+  const items=db[cat]||[];
+  const tl=document.getElementById('timeline');
+  if(!items.length){
+    tl.innerHTML='<div style="text-align:center;padding:48px 0;font-size:13px;color:var(--text-muted)">No entries yet.<br/>Tap + to add one.</div>';
+  } else {
+    tl.innerHTML=items.map((it,i)=>`
+      <div class="t-item"><div class="t-dot"></div>
+        <div class="entry-card" onclick="openEntry(${i})">
+          <div class="entry-date">${fmt(it.date)}</div>
+          <div class="entry-subj">${it.subject}</div>
+        </div>
+      </div>`).join('');
+  }
+  document.getElementById('listTotal').textContent='TOTAL '+String(items.length).padStart(2,'0');
+}
+
+function openEntry(i){
+  idx=i;
+  const it=db[cat][i];
+  document.getElementById('dDate').textContent=fmt(it.date);
+  document.getElementById('dSubj').textContent=it.subject.toUpperCase();
+  document.getElementById('detailBack').textContent=cat;
+  document.getElementById('dIdiom').value=it.idiom||'';
+  document.getElementById('dNotes').value=it.notes||'';
+  const checks=it.checks||{};
+  document.querySelectorAll('.cl-opts').forEach(g=>{
+    const saved=checks[g.dataset.key]||[];
+    g.querySelectorAll('.cl-opt').forEach(b=>b.classList.toggle('on',saved.includes(b.dataset.v)));
+  });
+  show('detail');
+  ['dIdiom','dNotes'].forEach(id=>ar(document.getElementById(id)));
+}
+
+document.querySelectorAll('.cl-opts').forEach(g=>{
+  g.addEventListener('click',e=>{
+    const b=e.target.closest('.cl-opt');if(!b)return;
+    if(g.dataset.single==='1'){g.querySelectorAll('.cl-opt').forEach(x=>x.classList.remove('on'));b.classList.add('on');}
+    else{b.classList.toggle('on');}
+    persist();
+  });
+});
+
+function persist(){
+  if(idx===null)return;
+  const it=db[cat][idx];
+  it.idiom=document.getElementById('dIdiom').value;
+  it.notes=document.getElementById('dNotes').value;
+  it.checks={};
+  document.querySelectorAll('.cl-opts').forEach(g=>{
+    it.checks[g.dataset.key]=[...g.querySelectorAll('.cl-opt.on')].map(b=>b.dataset.v);
+  });
+  save();
+}
+
+['dIdiom','dNotes'].forEach(id=>{
+  document.getElementById(id).addEventListener('input',function(){ar(this);persist();});
+});
+
+function ar(el){el.style.height='auto';el.style.height=el.scrollHeight+'px';}
+
+function setGender(g){
+  if(idx===null)return;
+  db[cat][idx].gender=g;
+  save();
+}
+
+function openModal(){document.getElementById('modal').classList.add('open');document.getElementById('mDate').focus();}
+function closeModal(){document.getElementById('modal').classList.remove('open');document.getElementById('mDate').value='';document.getElementById('mSubj').value='';}
+function bgClose(e){if(e.target===document.getElementById('modal'))closeModal();}
+
+function addEntry(){
+  const date=document.getElementById('mDate').value.trim();
+  const subject=document.getElementById('mSubj').value.trim();
+  if(!subject){document.getElementById('mSubj').focus();return;}
+  db[cat].unshift({date,subject,idiom:'',notes:'',checks:{},gender:null});
+  save();renderList();updateStats();closeModal();
+}
+
+function idiomFallback(){
+  document.getElementById('idiomText').textContent=FALLBACKS[Math.floor(Math.random()*FALLBACKS.length)];
+}
+
+async function refreshIdiom(){
+  if(busy)return;busy=true;
+  const el=document.getElementById('idiomText');
+  el.textContent='...';
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:'Give me one short inspiring Christian or biblical idiom or proverb (1-2 sentences max). Reply with just the idiom, no quotes or attribution.'}]})
+    });
+    const d=await r.json();
+    el.textContent=d.content?.[0]?.text?.trim()||FALLBACKS[Math.floor(Math.random()*FALLBACKS.length)];
+  }catch{idiomFallback();}
+  busy=false;
+}
+
+load();
+</script>
+</body>
+</html>
