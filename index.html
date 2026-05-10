@@ -1,194 +1,931 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-<title>The Word Diary</title>
-
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<title>Life Diary</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;700;900&display=swap" rel="stylesheet"/>
 <style>
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+/* ── RESET ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+/* ── TOKENS ── */
+:root {
+  --c-bg:      #ffffff;
+  --c-cream:   #f0ece3;
+  --c-surface: #fffcf8;
+  --c-text:    #726c60;
+  --c-dim:     rgba(114,108,96,0.45);
+  --c-border:  rgba(114,108,96,0.22);
+  --c-green:   #dae5b3;
+  --c-gray:    #b1b7a7;
+  --c-blue-t:  #c8d3eb;
+  --c-blue-k:  #7b8fc7;
+  --c-pink-t:  #eacdd2;
+  --c-pink-k:  #c47a8a;
+
+  /* PDF 4page 수치 ÷ 390 × 100 = vw */
+  --pad-h:  7.2vw;   /* 좌우 여백 28px/390 */
+  --pad-top: calc(env(safe-area-inset-top, 0px) + 14vw); /* safe-area + 상단 여백 */
 }
 
-body {
-  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-  background: #fff;
-  color: #111;
-
+html, body {
   width: 100%;
-  min-height: 100vh;
-
-  padding-top: env(safe-area-inset-top);
-  padding-bottom: env(safe-area-inset-bottom);
+  height: 100%;
+  overflow: hidden;
+  background: var(--c-bg);
+  font-family: 'Noto Serif KR', serif;
+  color: var(--c-text);
 }
 
-/* 전체 페이지 */
-.page {
+/* ════════════════════
+   SCREEN SYSTEM
+════════════════════ */
+.screen {
+  position: fixed;
+  inset: 0;
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
-  padding: 20px 18px;
-  gap: 28px;
+  background: var(--c-bg);
+  overflow: hidden;
+  transition: transform 0.32s cubic-bezier(.4,0,.2,1), opacity 0.32s;
+  will-change: transform;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.screen.hidden { transform: translateX(100%); pointer-events: none; }
+.screen.out    { transform: translateX(-25%); opacity: 0.3; pointer-events: none; }
+
+/* ════════════════════
+   1. SPLASH
+════════════════════ */
+#splash {
+  align-items: center;
+  justify-content: center;
+  background: var(--c-cream);
+  padding-top: env(safe-area-inset-top, 0px);
+}
+.sp-img-wrap {
+  width: 36vw; aspect-ratio: 1;
+  margin-bottom: 5vw;
+  cursor: pointer;
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+}
+.sp-img-wrap svg, .sp-img-wrap img { width: 100%; height: 100%; object-fit: contain; }
+.sp-img-wrap img { display: none; position: absolute; inset: 0; }
+.sp-edit-dot {
+  display: none;
+  position: absolute; bottom: -1vw; right: -1vw;
+  width: 6vw; height: 6vw; border-radius: 50%;
+  background: var(--c-surface); border: 0.3vw solid var(--c-border);
+  align-items: center; justify-content: center;
+  font-size: 3vw; color: var(--c-dim);
+}
+.sp-title {
+  font-size: 5.6vw; font-weight: 900;
+  letter-spacing: 0.22em; color: var(--c-text);
+  margin-bottom: 2.5vw;
+}
+.sp-sub {
+  font-size: 3vw; font-weight: 300;
+  color: var(--c-dim); text-align: center;
+  padding: 0 10vw; line-height: 1.8;
+}
+#imgFileInput { display: none; }
+
+/* ════════════════════
+   2. HOME
+════════════════════ */
+#home { background: var(--c-bg); }
+
+.home-hdr {
+  flex-shrink: 0;
+  background: var(--c-cream);
+  padding: var(--pad-top) var(--pad-h) 6vw;
+  border-radius: 0 0 9vw 9vw;
+}
+.home-greeting { font-size: 3.3vw; font-weight: 300; color: var(--c-dim); margin-bottom: 1.5vw; }
+.home-title    { font-size: 5.6vw; font-weight: 700; color: var(--c-text); line-height: 1.35; }
+
+.home-body {
+  flex: 1; overflow-y: auto;
+  padding: 4vw var(--pad-h) 8vw;
+  display: flex; flex-direction: column; gap: 3vw;
+  -webkit-overflow-scrolling: touch;
 }
 
-/* 상단 타이틀 */
-.header {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+/* idiom card */
+.idiom-card {
+  background: var(--c-surface);
+  border-radius: 4vw;
+  padding: 3.5vw 3.5vw 3.5vw 4vw;
+  display: flex; align-items: center; gap: 3vw;
+  border: 0.3vw solid var(--c-border);
+}
+.idiom-inner { flex: 1; min-width: 0; }
+.idiom-lbl {
+  font-size: 2.3vw; letter-spacing: 0.14em;
+  font-weight: 400; color: var(--c-dim); margin-bottom: 1.5vw;
+}
+.idiom-txt { font-size: 3.3vw; font-weight: 300; color: var(--c-text); line-height: 1.65; }
+.idiom-refresh {
+  flex-shrink: 0;
+  width: 9vw; height: 9vw; border-radius: 50%;
+  background: var(--c-cream); border: 0.3vw solid var(--c-border);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: transform 0.35s;
+}
+.idiom-refresh.spin { transform: rotate(360deg); }
+
+/* stats card */
+.stats-card {
+  background: var(--c-surface);
+  border-radius: 4vw;
+  padding: 4vw;
+  border: 0.3vw solid var(--c-border);
+}
+.stats-title { font-size: 5.1vw; font-weight: 700; color: var(--c-text); margin-bottom: 1vw; }
+.stats-note  { font-size: 3.3vw; font-weight: 300; color: var(--c-dim); }
+.stats-grid  { display: flex; gap: 2.5vw; margin-top: 3vw; }
+.stat-box    { flex: 1; background: var(--c-cream); border-radius: 3vw; padding: 3vw 2vw; text-align: center; }
+.stat-n      { font-size: 6vw; font-weight: 700; color: var(--c-text); line-height: 1; }
+.stat-l      { font-size: 2.3vw; letter-spacing: 0.07em; font-weight: 300; color: var(--c-dim); margin-top: 1vw; }
+
+.h-rule { height: 0.3vw; background: var(--c-border); }
+
+/* category buttons */
+.cat-btn {
+  width: 100%; border: none; cursor: pointer;
+  font-family: 'Noto Serif KR', serif;
+  font-size: 5.6vw; font-weight: 700; color: var(--c-text);
+  border-radius: 4vw; padding: 5.5vw 4vw; text-align: center;
+  transition: opacity 0.15s, transform 0.12s;
+}
+.cat-btn:active { opacity: 0.78; transform: scale(0.98); }
+.cat-service   { background: var(--c-green); }
+.cat-education { background: var(--c-gray); }
+
+/* ════════════════════
+   3. LIST
+════════════════════ */
+#list { background: var(--c-bg); }
+
+.list-hdr {
+  flex-shrink: 0;
+  background: var(--c-cream);
+  padding: var(--pad-top) var(--pad-h) 6vw;
+  border-radius: 0 0 9vw 9vw;
+  display: flex; align-items: flex-end; justify-content: space-between;
+}
+.list-hdr-left { display: flex; flex-direction: column; gap: 1vw; }
+.list-title    { font-size: 7.7vw; font-weight: 700; color: var(--c-text); line-height: 1; }
+
+.add-btn {
+  width: 11vw; height: 11vw; border-radius: 50%;
+  background: var(--c-surface); border: 0.3vw solid var(--c-border);
+  font-size: 6vw; color: var(--c-text);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; flex-shrink: 0;
+  box-shadow: 0 0.5vw 2vw rgba(114,108,96,0.1);
+  transition: transform 0.12s;
+}
+.add-btn:active { transform: scale(0.92); }
+
+.list-body {
+  flex: 1; overflow-y: auto;
+  padding: 6vw var(--pad-h) 8vw;
+  -webkit-overflow-scrolling: touch;
 }
 
-.header h1 {
-  font-size: 1.8rem;
-  font-weight: 700;
+/* timeline */
+.timeline { position: relative; padding-left: 5.5vw; }
+.tl-line {
+  position: absolute; left: 1.5vw; top: 3vw; bottom: 3vw;
+  width: 0.3vw; background: var(--c-border);
+}
+.tl-item { position: relative; margin-bottom: 3vw; }
+.tl-dot {
+  position: absolute; left: -4.5vw; top: 3.8vw;
+  width: 3vw; height: 3vw; border-radius: 50%;
+  background: var(--c-text); border: 0.6vw solid var(--c-bg);
+}
+.tl-item:not(:first-child) .tl-dot {
+  background: var(--c-surface); border: 0.5vw solid var(--c-border);
+}
+.entry-card {
+  background: var(--c-surface);
+  border-radius: 4vw; padding: 3.5vw 4.5vw;
+  cursor: pointer; border: 0.3vw solid var(--c-border);
+  transition: opacity 0.15s;
+}
+.entry-card:active { opacity: 0.7; }
+.entry-date { font-size: 2.5vw; letter-spacing: 0.1em; font-weight: 300; color: var(--c-dim); margin-bottom: 1vw; }
+.entry-subj { font-size: 4vw; font-weight: 700; letter-spacing: 0.06em; color: var(--c-text); text-transform: uppercase; }
+.list-total { text-align: center; font-size: 2.5vw; letter-spacing: 0.12em; font-weight: 300; color: var(--c-dim); padding: 5vw 0 2vw; }
+.list-empty { text-align: center; padding: 15vw 0; font-size: 3.5vw; font-weight: 300; color: var(--c-dim); line-height: 2; }
+
+/* ════════════════════
+   4. DETAIL
+   PDF 수치 기준 (390px canvas)
+   좌 28px → 7.2vw | 우 28px → 7.2vw
+   상단 52px → 13.3vw | YYMMDD→SUBJECT 간격 자연스럽게
+   CHECKLIST 위 28px | 행간 10px→2.6vw | SERVICE아래 22px→5.6vw
+   크림박스 pill높이 34px→8.7vw
+════════════════════ */
+#detail { background: var(--c-bg); }
+
+.detail-hdr {
+  flex-shrink: 0;
+  padding: var(--pad-top) var(--pad-h) 0;
+  position: relative;
+}
+.detail-date {
+  font-size: 2.8vw; letter-spacing: 0.08em;
+  font-weight: 300; color: var(--c-dim);
+  margin-bottom: 1vw;
+}
+.detail-subj-row {
+  display: flex; align-items: center; gap: 2vw;
+  padding-right: 25vw; /* space for toggle */
+}
+.detail-subj {
+  font-size: 6.2vw; font-weight: 900;
+  letter-spacing: 0.03em; color: var(--c-text);
+  text-transform: uppercase; line-height: 1.1;
+}
+.edit-btn {
+  background: none; border: none; cursor: pointer;
+  padding: 0; flex-shrink: 0; opacity: 0.4;
+  display: flex; align-items: center;
 }
 
-.header p {
-  font-size: 0.85rem;
-  color: #666;
-  line-height: 1.4;
+/* toggle switch */
+.toggle {
+  position: absolute;
+  right: var(--pad-h);
+  top: var(--pad-top);
+  width: 17.9vw; height: 9vw;
+  border-radius: 9vw;
+  border: none; cursor: pointer; padding: 0.8vw;
+  background: var(--c-pink-t);
+  display: flex; align-items: center;
+  transition: background 0.3s;
+}
+.toggle-knob {
+  width: 7.4vw; height: 7.4vw; border-radius: 50%;
+  background: var(--c-pink-k);
+  transition: transform 0.3s, background 0.3s;
+  transform: translateX(8.9vw);
+  flex-shrink: 0;
+}
+#detail.blue .toggle { background: var(--c-blue-t); }
+#detail.blue .toggle-knob { background: var(--c-blue-k); transform: translateX(0); }
+
+/* detail scroll */
+.detail-body {
+  flex: 1; overflow-y: auto;
+  display: flex; flex-direction: column;
+  padding: 0 var(--pad-h);
+  -webkit-overflow-scrolling: touch;
 }
 
-/* 서비스 메뉴 */
-.menu {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.85rem;
+/* back button */
+.back-btn {
+  background: none; border: none; cursor: pointer;
+  font-family: 'Noto Serif KR', serif;
+  font-size: 3.5vw; font-weight: 300; color: var(--c-dim);
+  display: inline-flex; align-items: center; gap: 1vw;
+  padding: 0; margin-bottom: 2vw;
 }
 
-/* 인트로 */
-.intro {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+/* checklist section */
+.cl-wrap { padding-top: 7vw; }
+.cl-title {
+  font-size: 2.8vw; letter-spacing: 0.16em; font-weight: 700;
+  color: var(--c-text); margin-bottom: 5.1vw;
+}
+.cl-row {
+  display: flex; align-items: center;
+  margin-bottom: 5.1vw; /* 행간 ~20px */
+}
+.cl-row:last-of-type { margin-bottom: 11.3vw; } /* SERVICE 아래 ~44px */
+.cl-lbl {
+  font-size: 2.8vw; font-weight: 700; letter-spacing: 0.08em;
+  color: var(--c-text); width: 18vw; flex-shrink: 0;
+}
+.cl-pills {
+  display: flex; flex-wrap: nowrap; gap: 1.5vw; align-items: center;
+  flex: 1; min-width: 0; overflow: hidden;
+}
+.pill {
+  height: 8.7vw; padding: 0 3vw; border-radius: 8.7vw;
+  border: 0.3vw solid var(--c-border);
+  font-family: 'Noto Serif KR', serif;
+  font-size: 2.8vw; letter-spacing: 0.04em; font-weight: 300;
+  color: var(--c-text); background: transparent; cursor: pointer;
+  display: flex; align-items: center; white-space: nowrap; flex-shrink: 0;
+  transition: background 0.13s, color 0.13s, border-color 0.13s;
+}
+.pill.on  { background: var(--c-text); color: #fff; border-color: var(--c-text); }
+.pill.off { color: #d5d5d5; border-color: #d5d5d5; pointer-events: none; }
+.pill-sep {
+  width: 0.3vw; height: 4vw; background: var(--c-border);
+  flex-shrink: 0; margin: 0 0.8vw; align-self: center;
 }
 
-.intro .main {
-  font-size: 1.1rem;
-  font-weight: 500;
+/* cream box (IDIOM/NOTES) */
+.cream-box {
+  flex: 1;
+  margin: 0 calc(var(--pad-h) * -1);
+  background: var(--c-cream);
+  border-radius: 5.5vw 5.5vw 0 0;
+  padding: 5vw var(--pad-h) calc(env(safe-area-inset-bottom, 0px) + 10vw);
+  display: flex; flex-direction: column; gap: 4vw;
+  min-height: 30vw;
 }
+.cream-row { display: flex; align-items: flex-start; gap: 0; }
+.cream-lbl {
+  font-size: 2.8vw; font-weight: 700; letter-spacing: 0.09em;
+  color: var(--c-text); width: 15.4vw; flex-shrink: 0; padding-top: 0.5vw;
+}
+.cream-ta {
+  flex: 1; border: none; outline: none;
+  background: transparent; resize: none;
+  font-family: 'Noto Serif KR', serif;
+  font-size: 3.5vw; font-weight: 300;
+  color: var(--c-text); line-height: 1.7; min-height: 5vw;
+}
+.cream-ta::placeholder { color: var(--c-dim); }
 
-.intro .sub {
-  font-size: 0.9rem;
-  color: #666;
+/* ════════════════════
+   BOTTOM SHEET
+════════════════════ */
+.sheet-bg {
+  position: fixed; inset: 0; z-index: 100;
+  background: rgba(114,108,96,0.25);
+  display: flex; align-items: flex-end;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.25s;
 }
+.sheet-bg.open { opacity: 1; pointer-events: all; }
+.sheet {
+  width: 100%; background: var(--c-surface);
+  border-radius: 7vw 7vw 0 0;
+  padding: 6vw var(--pad-h) calc(env(safe-area-inset-bottom, 0px) + 10vw);
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(.4,0,.2,1);
+}
+.sheet-bg.open .sheet { transform: translateY(0); }
+.sheet-head {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 5vw;
+}
+.sheet-title { font-size: 5vw; font-weight: 700; color: var(--c-text); }
+.sheet-close {
+  background: none; border: none; cursor: pointer;
+  font-size: 6vw; color: var(--c-dim); line-height: 1;
+}
+.sheet-input {
+  width: 100%; border: 0.3vw solid var(--c-border);
+  border-radius: 3.5vw; padding: 3.5vw 4vw;
+  font-family: 'Noto Serif KR', serif; font-size: 4vw; font-weight: 300;
+  color: var(--c-text); background: var(--c-bg); outline: none;
+  margin-bottom: 3vw;
+}
+.sheet-input:focus { border-color: var(--c-text); }
+.sheet-btn {
+  width: 100%; padding: 4vw; background: var(--c-text);
+  color: #fff; border: none; border-radius: 3.5vw;
+  font-family: 'Noto Serif KR', serif; font-size: 4vw; font-weight: 700;
+  cursor: pointer; transition: opacity 0.15s;
+}
+.sheet-btn:active { opacity: 0.82; }
 
-/* 랜덤 이디엄 */
-.idiom {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+/* ════════════════════
+   IMAGE OVERLAY
+════════════════════ */
+.img-bg {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(0,0,0,0.3);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity 0.22s;
 }
-
-.idiom .label {
-  font-size: 0.75rem;
-  color: #999;
+.img-bg.open { opacity: 1; pointer-events: all; }
+.img-card {
+  background: var(--c-surface); border-radius: 5.5vw;
+  padding: 6vw; width: 80vw;
+  display: flex; flex-direction: column; gap: 4vw;
+  transform: scale(0.92); transition: transform 0.22s;
 }
-
-.idiom .text {
-  font-size: 1rem;
+.img-bg.open .img-card { transform: scale(1); }
+.img-card-title { font-size: 4.5vw; font-weight: 700; color: var(--c-text); }
+.drop-zone {
+  border: 0.5vw dashed var(--c-border); border-radius: 4vw;
+  padding: 8vw 4vw; text-align: center; cursor: pointer;
+  font-size: 3.5vw; font-weight: 300; color: var(--c-dim); line-height: 1.8;
 }
-
-/* 리스트 */
-.list {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+.img-preview-wrap { display: none; flex-direction: column; align-items: center; gap: 3vw; }
+.img-preview { width: 28vw; height: 28vw; object-fit: contain; border-radius: 3vw; border: 0.3vw solid var(--c-border); }
+.img-actions { display: flex; gap: 2.5vw; width: 100%; }
+.img-act {
+  flex: 1; padding: 3vw; border-radius: 3vw; cursor: pointer;
+  font-family: 'Noto Serif KR', serif; font-size: 3.5vw; font-weight: 400;
+  border: 0.3vw solid var(--c-border); color: var(--c-text); background: transparent;
+  transition: opacity 0.15s;
 }
-
-.item {
-  display: flex;
-  justify-content: space-between;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 8px;
-}
-
-.date {
-  font-size: 0.8rem;
-  color: #999;
-}
-
-.subject {
-  font-size: 1rem;
-}
-
-/* TOTAL */
-.total {
-  font-size: 0.9rem;
-  color: #666;
-}
-
-/* 하단 */
-.footer {
-  margin-top: auto;
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.8rem;
-  border-top: 1px solid #eee;
-  padding-top: 12px;
-}
+.img-act.confirm { background: var(--c-text); color: #fff; border-color: var(--c-text); }
+.img-act:active { opacity: 0.78; }
+#imgFile { display: none; }
 </style>
 </head>
-
 <body>
 
-<div class="page">
-
-  <!-- HEADER -->
-  <div class="header">
-    <h1>LIFE DIARY</h1>
-    <p>Be not overcome of evil, but overcome evil with good.</p>
+<!-- ════ SPLASH ════ -->
+<div class="screen" id="splash">
+  <div class="sp-img-wrap" id="spImgWrap" onclick="openImgOverlay()">
+    <svg id="spSvg" viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg">
+      <path d="M106 182 Q102 148 96 124 Q90 100 84 82" stroke="#8B7355" stroke-width="9" fill="none" stroke-linecap="round"/>
+      <path d="M114 182 Q118 148 124 124 Q130 100 136 82" stroke="#8B7355" stroke-width="9" fill="none" stroke-linecap="round"/>
+      <ellipse cx="110" cy="186" rx="22" ry="6" fill="#8B7355" opacity="0.3"/>
+      <path d="M100 134 Q80 116 56 110" stroke="#8B7355" stroke-width="6" fill="none" stroke-linecap="round"/>
+      <path d="M103 116 Q86 96 68 88" stroke="#8B7355" stroke-width="5" fill="none" stroke-linecap="round"/>
+      <path d="M110 105 Q110 82 110 64" stroke="#8B7355" stroke-width="5" fill="none" stroke-linecap="round"/>
+      <path d="M117 118 Q138 100 158 96" stroke="#8B7355" stroke-width="5" fill="none" stroke-linecap="round"/>
+      <path d="M120 136 Q144 124 166 128" stroke="#8B7355" stroke-width="6" fill="none" stroke-linecap="round"/>
+      <ellipse cx="53" cy="105" rx="16" ry="10" fill="#4a7c4e" transform="rotate(-18,53,105)"/>
+      <ellipse cx="66" cy="83" rx="15" ry="9" fill="#4a7c4e" transform="rotate(-8,66,83)"/>
+      <ellipse cx="40" cy="118" rx="13" ry="8" fill="#3d6b41" transform="rotate(14,40,118)"/>
+      <ellipse cx="160" cy="92" rx="15" ry="9" fill="#4a7c4e" transform="rotate(18,160,92)"/>
+      <ellipse cx="168" cy="120" rx="13" ry="9" fill="#3d6b41" transform="rotate(-8,168,120)"/>
+      <ellipse cx="178" cy="134" rx="11" ry="8" fill="#4a7c4e" transform="rotate(22,178,134)"/>
+      <ellipse cx="110" cy="56" rx="15" ry="10" fill="#8ec85a" transform="rotate(4,110,56)"/>
+      <ellipse cx="128" cy="70" rx="14" ry="9" fill="#a0d468" transform="rotate(18,128,70)"/>
+      <ellipse cx="92" cy="72" rx="13" ry="8" fill="#8ec85a" transform="rotate(-14,92,72)"/>
+      <ellipse cx="148" cy="105" rx="14" ry="8" fill="#a0d468" transform="rotate(8,148,105)"/>
+      <ellipse cx="75" cy="100" rx="12" ry="8" fill="#8ec85a" transform="rotate(-18,75,100)"/>
+      <ellipse cx="80" cy="128" rx="13" ry="8" fill="#a0d468" transform="rotate(-4,80,128)"/>
+      <ellipse cx="140" cy="130" rx="13" ry="8" fill="#8ec85a" transform="rotate(14,140,130)"/>
+      <ellipse cx="96" cy="130" rx="8" ry="10" fill="#8B7355"/>
+    </svg>
+    <img id="spImg" src="" alt="splash"/>
+    <div class="sp-edit-dot" id="spEditDot">✎</div>
   </div>
-
-  <!-- MENU -->
-  <div class="menu">
-    <span>Service</span>
-    <span>Education</span>
-    <span>Statistics</span>
-  </div>
-
-  <!-- INTRO -->
-  <div class="intro">
-    <div class="main">Let’s write God’s word on your heart</div>
-    <div class="sub">Good Morning, Jisu.</div>
-  </div>
-
-  <!-- IDIOM -->
-  <div class="idiom">
-    <div class="label">RANDOM IDIOM</div>
-    <div class="text">on the drawing board...</div>
-  </div>
-
-  <!-- LIST -->
-  <div class="list">
-    <div class="item">
-      <span class="date">YYMMDD</span>
-      <span class="subject">SUBJECT</span>
-    </div>
-    <div class="item">
-      <span class="date">YYMMDD</span>
-      <span class="subject">SUBJECT</span>
-    </div>
-    <div class="item">
-      <span class="date">YYMMDD</span>
-      <span class="subject">SUBJECT</span>
-    </div>
-  </div>
-
-  <!-- TOTAL -->
-  <div class="total">TOTAL</div>
-
-  <!-- FOOTER -->
-  <div class="footer">
-    <span>Service</span>
-    <span>Education</span>
-    <span>Statistics</span>
-  </div>
-
+  <div class="sp-title">LIFE DIARY</div>
+  <div class="sp-sub">Be not overcome of evil, but overcome evil with good.</div>
 </div>
 
+<!-- ════ HOME ════ -->
+<div class="screen hidden" id="home">
+  <div class="home-hdr">
+    <div class="home-greeting">Good Morning, Jisu.</div>
+    <div class="home-title">Let's write God's word<br/>on your heart</div>
+  </div>
+  <div class="home-body">
+    <div class="idiom-card">
+      <div class="idiom-inner">
+        <div class="idiom-lbl">RANDOM IDIOM</div>
+        <div class="idiom-txt" id="idiomTxt">—</div>
+      </div>
+      <button class="idiom-refresh" id="idiomBtn" onclick="fetchIdiom()">
+        <svg width="4.5vw" height="4.5vw" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--c-dim)">
+          <path d="M1 4v6h6"/><path d="M23 20v-6h-6"/>
+          <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 0 1 3.51 15"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="stats-card">
+      <div class="stats-title">Statistics</div>
+      <div class="stats-note" id="statsNote">on the drawing board...</div>
+      <div class="stats-grid" id="statsGrid" style="display:none">
+        <div class="stat-box"><div class="stat-n" id="sN">0</div><div class="stat-l">SERVICE</div></div>
+        <div class="stat-box"><div class="stat-n" id="eN">0</div><div class="stat-l">EDUCATION</div></div>
+        <div class="stat-box"><div class="stat-n" id="tN">0</div><div class="stat-l">TOTAL</div></div>
+      </div>
+    </div>
+
+    <div class="h-rule"></div>
+    <button class="cat-btn cat-service"   onclick="goList('Service')">Service</button>
+    <button class="cat-btn cat-education" onclick="goList('Education')">Education</button>
+  </div>
+</div>
+
+<!-- ════ LIST ════ -->
+<div class="screen hidden" id="list">
+  <div class="list-hdr">
+    <div class="list-hdr-left">
+      <button class="back-btn" onclick="goBack('list','home')">
+        <svg width="3.5vw" height="3.5vw" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        Home
+      </button>
+      <div class="list-title" id="listTitle">Service</div>
+    </div>
+    <button class="add-btn" onclick="openAddSheet()">+</button>
+  </div>
+  <div class="list-body">
+    <div class="timeline">
+      <div class="tl-line"></div>
+      <div id="tlItems"></div>
+    </div>
+    <div class="list-total" id="listTotal">TOTAL 00</div>
+  </div>
+</div>
+
+<!-- ════ DETAIL ════ -->
+<div class="screen hidden" id="detail">
+  <div class="detail-hdr">
+    <button class="back-btn" onclick="goBack('detail','list')">
+      <svg width="3.5vw" height="3.5vw" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+      <span id="detailBackLbl">Service</span>
+    </button>
+    <div class="detail-date" id="detailDate">YYMMDD</div>
+    <div class="detail-subj-row">
+      <div class="detail-subj" id="detailSubj">SUBJECT</div>
+      <button class="edit-btn" onclick="openEditSheet()">
+        <svg width="3.6vw" height="3.6vw" viewBox="0 0 24 24" fill="none" stroke="var(--c-text)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+        </svg>
+      </button>
+    </div>
+    <button class="toggle" id="gToggle" onclick="toggleGender()">
+      <div class="toggle-knob" id="gKnob"></div>
+    </button>
+  </div>
+
+  <div class="detail-body">
+    <div class="cl-wrap">
+      <div class="cl-title">CHECKLIST</div>
+      <div class="cl-row">
+        <div class="cl-lbl">ARRIVE</div>
+        <div class="cl-pills" data-key="arrive" data-single="1">
+          <button class="pill" data-v="ON TIME">ON TIME</button>
+          <button class="pill" data-v="LATE">LATE</button>
+        </div>
+      </div>
+      <div class="cl-row">
+        <div class="cl-lbl">CLOTH</div>
+        <div class="cl-pills" data-key="cloth" data-single="1">
+          <button class="pill" data-v="STANDARD">STANDARD</button>
+          <button class="pill" data-v="NOT YET">NOT YET</button>
+        </div>
+      </div>
+      <div class="cl-row">
+        <div class="cl-lbl">SERVICE</div>
+        <div class="cl-pills" data-key="svc" data-single="0">
+          <button class="pill" data-v="INTACT">INTACT</button>
+          <span class="pill-sep"></span>
+          <button class="pill" data-v="SONG">SONG</button>
+          <button class="pill" data-v="GOD'S WORD">GOD'S WORD</button>
+          <button class="pill" data-v="PRAY">PRAY</button>
+          <button class="pill" data-v="AD">AD</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="cream-box">
+      <div class="cream-row">
+        <div class="cream-lbl">IDIOM</div>
+        <textarea class="cream-ta" id="dIdiom" rows="1" placeholder="Write today's idiom..."></textarea>
+      </div>
+      <div class="cream-row">
+        <div class="cream-lbl">NOTES</div>
+        <textarea class="cream-ta" id="dNotes" rows="3" placeholder="Write your notes..."></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ ADD SHEET ════ -->
+<div class="sheet-bg" id="addSheet" onclick="sheetBgClose(event,'addSheet')">
+  <div class="sheet">
+    <div class="sheet-head">
+      <div class="sheet-title">New Entry</div>
+      <button class="sheet-close" onclick="closeSheet('addSheet')">×</button>
+    </div>
+    <input class="sheet-input" id="aDate" placeholder="Date (e.g. 260419)" maxlength="6"/>
+    <input class="sheet-input" id="aSubj" placeholder="Subject / Title"/>
+    <button class="sheet-btn" onclick="saveAdd()">Add</button>
+  </div>
+</div>
+
+<!-- ════ EDIT SHEET ════ -->
+<div class="sheet-bg" id="editSheet" onclick="sheetBgClose(event,'editSheet')">
+  <div class="sheet">
+    <div class="sheet-head">
+      <div class="sheet-title">Edit Entry</div>
+      <button class="sheet-close" onclick="closeSheet('editSheet')">×</button>
+    </div>
+    <input class="sheet-input" id="eDate" placeholder="Date (e.g. 260419)" maxlength="6"/>
+    <input class="sheet-input" id="eSubj" placeholder="Subject / Title"/>
+    <button class="sheet-btn" onclick="saveEdit()">Save</button>
+  </div>
+</div>
+
+<!-- ════ IMAGE OVERLAY ════ -->
+<div class="img-bg" id="imgBg" onclick="imgBgClose(event)">
+  <div class="img-card">
+    <div class="img-card-title">스플래시 이미지 변경</div>
+    <div class="drop-zone" id="dropZone" onclick="document.getElementById('imgFile').click()">
+      탭하여 이미지 선택<br/><span style="font-size:2.8vw">PNG · JPG · SVG</span>
+    </div>
+    <div class="img-preview-wrap" id="imgPreviewWrap">
+      <img class="img-preview" id="imgPreview" src="" alt=""/>
+      <div class="img-actions">
+        <button class="img-act" onclick="cancelImg()">취소</button>
+        <button class="img-act confirm" onclick="applyImg()">적용</button>
+      </div>
+    </div>
+  </div>
+</div>
+<input type="file" id="imgFile" accept="image/*"/>
+
+<script>
+/* ══ STORE ══ */
+const KEY = 'lifediary_v5';
+let db = { Service:[], Education:[] };
+let cat = 'Service';
+let idx = null;
+let pendingImg = null;
+let aiBusy = false;
+
+const FALLBACKS = [
+  "Actions speak louder than words.",
+  "Every cloud has a silver lining.",
+  "The truth shall set you free.",
+  "Love your neighbor as yourself.",
+  "Faith without works is dead.",
+  "Be still and know that I am God.",
+  "Seek and you shall find.",
+  "Ask, and it will be given to you."
+];
+
+function load() {
+  try {
+    const r = localStorage.getItem(KEY);
+    if (!r) return;
+    const p = JSON.parse(r);
+    db = p.db || { Service:[], Education:[] };
+    if (p.img) setSplashImg(p.img);
+  } catch(e) {}
+}
+function save() {
+  const img = document.getElementById('spImg');
+  const imgData = img.style.display !== 'none' && img.src.startsWith('data:') ? img.src : null;
+  localStorage.setItem(KEY, JSON.stringify({ db, img: imgData }));
+}
+
+/* ══ SCREENS ══ */
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => {
+    s.classList.remove('out');
+    id === s.id ? s.classList.remove('hidden') : s.classList.add('hidden');
+  });
+}
+function goBack(from, to) {
+  const f = document.getElementById(from);
+  f.classList.add('out');
+  setTimeout(() => { f.classList.add('hidden'); f.classList.remove('out'); }, 330);
+  showScreen(to);
+  if (to === 'home') refreshStats();
+}
+
+/* ══ SPLASH ══ */
+setTimeout(() => {
+  showScreen('home');
+  setIdiom(FALLBACKS[Math.floor(Math.random() * FALLBACKS.length)]);
+  refreshStats();
+}, 2200);
+
+/* ══ HOME ══ */
+function refreshStats() {
+  const s = db.Service.length, e = db.Education.length, t = s + e;
+  document.getElementById('sN').textContent = s;
+  document.getElementById('eN').textContent = e;
+  document.getElementById('tN').textContent = t;
+  document.getElementById('statsNote').style.display = t ? 'none' : '';
+  document.getElementById('statsGrid').style.display = t ? 'flex' : 'none';
+}
+
+function setIdiom(txt) { document.getElementById('idiomTxt').textContent = txt; }
+async function fetchIdiom() {
+  if (aiBusy) return;
+  aiBusy = true;
+  const btn = document.getElementById('idiomBtn');
+  btn.classList.add('spin');
+  setIdiom('...');
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514', max_tokens: 1000,
+        messages: [{ role: 'user', content: 'Give me one short Christian or biblical idiom or proverb (1-2 sentences). Reply with just the idiom only, no attribution, no quotes.' }]
+      })
+    });
+    const d = await res.json();
+    setIdiom(d.content?.[0]?.text?.trim() || FALLBACKS[0]);
+  } catch { setIdiom(FALLBACKS[Math.floor(Math.random() * FALLBACKS.length)]); }
+  btn.classList.remove('spin');
+  aiBusy = false;
+}
+
+/* ══ LIST ══ */
+function goList(c) {
+  cat = c;
+  document.getElementById('listTitle').textContent = c;
+  renderList();
+  showScreen('list');
+}
+function fmtDate(d) {
+  const s = String(d || '');
+  return s.length === 6 ? `${s.slice(0,2)}.${s.slice(2,4)}.${s.slice(4,6)}` : s || '——';
+}
+function renderList() {
+  const items = db[cat] || [];
+  const el = document.getElementById('tlItems');
+  el.innerHTML = items.length
+    ? items.map((it, i) => `
+        <div class="tl-item">
+          <div class="tl-dot"></div>
+          <div class="entry-card" onclick="goDetail(${i})">
+            <div class="entry-date">${fmtDate(it.date)}</div>
+            <div class="entry-subj">${it.subject}</div>
+          </div>
+        </div>`).join('')
+    : `<div class="list-empty">No entries yet.<br/>Tap + to add one.</div>`;
+  document.getElementById('listTotal').textContent = `TOTAL ${String(items.length).padStart(2,'0')}`;
+}
+
+/* ══ ADD SHEET ══ */
+function openAddSheet() {
+  document.getElementById('aDate').value = '';
+  document.getElementById('aSubj').value = '';
+  document.getElementById('addSheet').classList.add('open');
+  setTimeout(() => document.getElementById('aDate').focus(), 300);
+}
+function saveAdd() {
+  const date = document.getElementById('aDate').value.trim();
+  const subject = document.getElementById('aSubj').value.trim();
+  if (!subject) { document.getElementById('aSubj').focus(); return; }
+  db[cat].unshift({ date, subject, idiom:'', notes:'', checks:{}, gender:'F' });
+  save(); renderList(); refreshStats();
+  closeSheet('addSheet');
+}
+
+/* ══ DETAIL ══ */
+function goDetail(i) {
+  idx = i;
+  const it = db[cat][i];
+  document.getElementById('detailDate').textContent = fmtDate(it.date);
+  document.getElementById('detailSubj').textContent = it.subject.toUpperCase();
+  document.getElementById('detailBackLbl').textContent = cat;
+  document.getElementById('dIdiom').value = it.idiom || '';
+  document.getElementById('dNotes').value = it.notes || '';
+
+  // gender toggle
+  const det = document.getElementById('detail');
+  det.classList.toggle('blue', it.gender === 'M');
+
+  // checklist
+  const checks = it.checks || {};
+  document.querySelectorAll('.cl-pills').forEach(g => {
+    const saved = checks[g.dataset.key] || [];
+    g.querySelectorAll('.pill').forEach(b => {
+      b.classList.remove('on','off');
+      b.classList.toggle('on', saved.includes(b.dataset.v));
+    });
+    if (g.dataset.key === 'svc') applySvcExclusion(g);
+  });
+
+  showScreen('detail');
+  ['dIdiom','dNotes'].forEach(id => ar(document.getElementById(id)));
+}
+
+/* checklist */
+document.querySelectorAll('.cl-pills').forEach(g => {
+  g.addEventListener('click', e => {
+    const b = e.target.closest('.pill');
+    if (!b || b.classList.contains('off')) return;
+    if (g.dataset.key === 'svc') {
+      const intact = g.querySelector('[data-v="INTACT"]');
+      const others = [...g.querySelectorAll('.pill:not([data-v="INTACT"])')];
+      if (b.dataset.v === 'INTACT') {
+        const wasOn = b.classList.contains('on');
+        b.classList.toggle('on', !wasOn);
+        others.forEach(o => { o.classList.remove('on'); o.classList.toggle('off', !wasOn); });
+      } else {
+        b.classList.toggle('on');
+        const anyOn = others.some(o => o.classList.contains('on'));
+        intact.classList.remove('on');
+        intact.classList.toggle('off', anyOn);
+      }
+    } else if (g.dataset.single === '1') {
+      g.querySelectorAll('.pill').forEach(x => x.classList.remove('on'));
+      b.classList.add('on');
+    } else {
+      b.classList.toggle('on');
+    }
+    persist();
+  });
+});
+
+function applySvcExclusion(g) {
+  const intact = g.querySelector('[data-v="INTACT"]');
+  const others = [...g.querySelectorAll('.pill:not([data-v="INTACT"])')];
+  if (intact.classList.contains('on')) {
+    others.forEach(o => { o.classList.remove('on'); o.classList.add('off'); });
+  } else if (others.some(o => o.classList.contains('on'))) {
+    intact.classList.remove('on'); intact.classList.add('off');
+  }
+}
+
+function persist() {
+  if (idx === null) return;
+  const it = db[cat][idx];
+  it.idiom = document.getElementById('dIdiom').value;
+  it.notes = document.getElementById('dNotes').value;
+  it.checks = {};
+  document.querySelectorAll('.cl-pills').forEach(g => {
+    it.checks[g.dataset.key] = [...g.querySelectorAll('.pill.on')].map(b => b.dataset.v);
+  });
+  save();
+}
+['dIdiom','dNotes'].forEach(id => {
+  document.getElementById(id).addEventListener('input', function() { ar(this); persist(); });
+});
+function ar(el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }
+
+/* gender toggle */
+function toggleGender() {
+  if (idx === null) return;
+  const it = db[cat][idx];
+  it.gender = it.gender === 'M' ? 'F' : 'M';
+  document.getElementById('detail').classList.toggle('blue', it.gender === 'M');
+  save();
+}
+
+/* edit sheet */
+function openEditSheet() {
+  if (idx === null) return;
+  const it = db[cat][idx];
+  document.getElementById('eDate').value = it.date || '';
+  document.getElementById('eSubj').value = it.subject || '';
+  document.getElementById('editSheet').classList.add('open');
+  setTimeout(() => document.getElementById('eSubj').focus(), 300);
+}
+function saveEdit() {
+  if (idx === null) return;
+  const date = document.getElementById('eDate').value.trim();
+  const subject = document.getElementById('eSubj').value.trim();
+  if (!subject) { document.getElementById('eSubj').focus(); return; }
+  const it = db[cat][idx];
+  it.date = date; it.subject = subject;
+  document.getElementById('detailDate').textContent = fmtDate(date);
+  document.getElementById('detailSubj').textContent = subject.toUpperCase();
+  save(); renderList();
+  closeSheet('editSheet');
+}
+
+/* ══ SHEETS ══ */
+function closeSheet(id) { document.getElementById(id).classList.remove('open'); }
+function sheetBgClose(e, id) { if (e.target.classList.contains('sheet-bg')) closeSheet(id); }
+
+/* ══ IMAGE ══ */
+function setSplashImg(dataUrl) {
+  const img = document.getElementById('spImg');
+  const svg = document.getElementById('spSvg');
+  const dot = document.getElementById('spEditDot');
+  img.src = dataUrl; img.style.display = 'block';
+  svg.style.display = 'none'; dot.style.display = 'flex';
+}
+function openImgOverlay() { document.getElementById('imgBg').classList.add('open'); }
+function imgBgClose(e) { if (e.target === document.getElementById('imgBg')) closeImgOverlay(); }
+function closeImgOverlay() {
+  document.getElementById('imgBg').classList.remove('open');
+  document.getElementById('dropZone').style.display = 'block';
+  document.getElementById('imgPreviewWrap').style.display = 'none';
+  document.getElementById('imgFile').value = '';
+  pendingImg = null;
+}
+function cancelImg() { closeImgOverlay(); }
+function applyImg() {
+  if (!pendingImg) return;
+  setSplashImg(pendingImg); save(); closeImgOverlay();
+}
+document.getElementById('imgFile').addEventListener('change', function() {
+  const f = this.files[0]; if (!f) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    pendingImg = e.target.result;
+    document.getElementById('imgPreview').src = pendingImg;
+    document.getElementById('dropZone').style.display = 'none';
+    document.getElementById('imgPreviewWrap').style.display = 'flex';
+  };
+  reader.readAsDataURL(f);
+});
+
+load();
+</script>
 </body>
 </html>
